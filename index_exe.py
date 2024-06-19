@@ -18,23 +18,43 @@ print(df[["N", "angle"]])
 plt.scatter(df["angle"], df["N"])
 utils.mkdir("plots")
 
-def model(angle, n_glass):
-    t = 0.825e5 # cm
-    wavelength = 0.53
-    return 1 / wavelength * (n_glass - 1) * (t/np.cos(np.radians(angle)) - t)
+# def model(angle, n_glass):
+#     t = 0.825e5 # cm
+#     wavelength = 0.53
+#     return 1 / wavelength * (n_glass - 1) * (t/np.cos(np.radians(angle)) - t)
 
-params, error_matrix = curve_fit(model, df["angle"], df["N"])
+def model(angle, n):
+    try:
+        t = 0.825e5 # cm
+        wavelength = 0.53
 
-# (angle, t, n_glass, n_air, wavelength) = params
+        a = wavelength**2
+        b = (n - (wavelength * angle**2)/2)/t
+        c = wavelength * (1 - angle)
 
-angle_array = np.linspace(0, 5, 100)
-fitted_N_array = model(angle_array, *params)
+        D = b**2 - 4*a*c
+
+        if D < 0:
+            raise   
+        
+        return (-b + np.sqrt(b**2 - 4*a*c))/(2*a)
+    except Exception as e:
+        return np.nan
+
+# def model(angle, n):
+#     term1 = N * 
+
+params, error_matrix = curve_fit(model, df["angle"], df["N"], p0=[1])
+
+angle_array = np.linspace(0, 5, 1000)
+fitted_N_array = [model(angle, *params) for angle in angle_array]
 
 plt.plot(angle_array, fitted_N_array)
 
-# plt.show()
 print(f"Index: {params[0]}")
 plt.savefig("plots/my-formula.png")
+
+print(params)
 plt.show()
 
 
